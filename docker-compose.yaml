@@ -1,0 +1,29 @@
+services:
+  buildkite-oceananigans:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: buildkite-julia-gpu:latest
+    container_name: buildkite-oceananigans
+    hostname: buildkite-oceananigans
+    restart: unless-stopped
+    shm_size: 32GB
+
+    # Secrets (BUILDKITE_AGENT_TOKEN, DOCUMENTER_KEY) come from .env, which is
+    # git-ignored. Copy .env.stub to .env and fill it in before starting.
+    env_file: .env
+
+    deploy:
+      resources:
+        limits:
+          cpus: 64
+          memory: 384GB
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']  # Use only GPU 3
+              capabilities: [gpu]
+
+    volumes:
+      - /mnt/storage3/docker/buildkite-oceananigans-data:/var/lib/buildkite-agent
+      - /mnt/storage3/docker/buildkite-oceananigans-tmp:/tmp

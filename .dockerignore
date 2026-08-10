@@ -1,0 +1,9 @@
+# Keep secrets out of the build context.
+.env
+
+# Not needed to build the image.
+.git
+.gitignore
+.dockerignore
+README.md
+docker-compose.yaml
