@@ -7,6 +7,13 @@ services:
     container_name: buildkite-oceananigans
     hostname: buildkite-oceananigans
     restart: unless-stopped
+
+    # Run Docker's tini as PID 1 so it reaps orphaned processes. Without it,
+    # buildkite-agent is PID 1 and never wait()s on children it didn't spawn, so
+    # every Julia worker, git or ptxas left behind by a finished job stays a
+    # zombie until the container is recreated.
+    init: true
+
     shm_size: 32GB
 
     # Secrets (BUILDKITE_AGENT_TOKEN, DOCUMENTER_KEY) come from .env, which is
