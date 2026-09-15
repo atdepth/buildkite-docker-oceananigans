@@ -20,10 +20,17 @@ services:
     # git-ignored. Copy .env.stub to .env and fill it in before starting.
     env_file: .env
 
+    # Pin the container to socket 0 (NUMA node 0: 32 physical cores plus their
+    # SMT siblings), which is also where GPU 3 is attached. A `cpus:` quota only
+    # caps CPU *time*; it lets the container's threads spread onto every
+    # physical core in the machine and take most of its real throughput while
+    # still staying under a "64 CPU" limit. The cpuset leaves socket 1 untouched
+    # and keeps host<->GPU memory traffic NUMA-local.
+    cpuset: "0-31,64-95"
+
     deploy:
       resources:
         limits:
-          cpus: 64
           memory: 384GB
         reservations:
           devices:

@@ -68,7 +68,8 @@ The agents should show up on your Buildkite **Agents** page within a few seconds
 | What | Where |
 | --- | --- |
 | GPU selection | `device_ids` under `deploy.resources.reservations.devices` in `docker-compose.yaml` |
-| CPU and memory limits | `deploy.resources.limits` in `docker-compose.yaml` |
+| CPU pinning | `cpuset` in `docker-compose.yaml` (a set of logical CPUs, not a `cpus:` time quota, so it bounds which cores the container can occupy) |
+| Memory limit | `deploy.resources.limits` in `docker-compose.yaml` |
 | Shared memory | `shm_size` in `docker-compose.yaml` |
 | Build and scratch storage | the host paths under `volumes` in `docker-compose.yaml` |
 | CUDA version | the `nvidia/cuda` base image tag in `Dockerfile` |
