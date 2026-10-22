@@ -49,4 +49,11 @@ USER buildkite-agent
 RUN curl -fsSL https://install.julialang.org | sh -s -- --yes
 ENV PATH="/var/lib/buildkite-agent/.juliaup/bin:$PATH"
 
-ENTRYPOINT ["buildkite-agent", "start", "--config", "/etc/buildkite-agent/buildkite-agent.cfg"]
+# Once a minute, kill every Julia process that has been running for more than
+# 4 hours. No CI job should take that long, so these are hung jobs or, more
+# often, Distributed.jl workers that outlived a cancelled job: they run in a
+# session of their own, so the agent's cancel signal never reaches them, and
+# they would otherwise hold their RAM and GPU memory until the container is
+# recreated. The loop runs in the background and exec then replaces the shell
+# with the agent, so tini still forwards docker stop's SIGTERM straight to it.
+ENTRYPOINT ["/bin/sh", "-c", "while true; do pkill --signal KILL --older 14400 --exact --echo julia; sleep 60; done & exec buildkite-agent start --config /etc/buildkite-agent/buildkite-agent.cfg"]

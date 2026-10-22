@@ -74,6 +74,7 @@ The agents should show up on your Buildkite **Agents** page within a few seconds
 | Build and scratch storage | the host paths under `volumes` in `docker-compose.yaml` |
 | CUDA version | the `nvidia/cuda` base image tag in `Dockerfile` |
 | Julia version | juliaup installs the current stable release in `Dockerfile`; pin a version with `juliaup add` and `juliaup default` |
+| Julia process time limit | `--older` (in seconds) in the `ENTRYPOINT` in `Dockerfile` |
 | Agent name, queue, and count | `buildkite-agent.cfg` |
 
 Two host directories are bind-mounted into the container:
@@ -89,6 +90,16 @@ stale file from the host directory instead.
 
 The `Dockerfile` clears `LD_LIBRARY_PATH` on purpose, so that CUDA.jl uses its own CUDA artifacts
 instead of the system libraries from the base image.
+
+The entrypoint also runs a loop that, once a minute, kills every `julia` process that has been
+running for more than 4 hours. No CI job should take that long, so these are hung jobs or, more
+often, Distributed.jl workers left behind by cancelled jobs: they run in a session of their own, so
+the agent's cancel signal never reaches them, and they would otherwise keep their RAM and GPU memory
+until the container is recreated. Each kill is logged:
+
+```bash
+docker compose logs --timestamps | grep 'julia killed'
+```
 
 ## Common tasks
 
